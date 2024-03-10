@@ -1,0 +1,26 @@
+name: Update Blocklist
+
+on:  # Define the events that trigger the workflow
+  schedule:
+    - cron:  '0 */6 * * *'
+  workflow_dispatch:
+  
+jobs:
+  update-blocklist:
+    runs-on: ubuntu-latest 
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.BOT_GITHUB_TOKEN || github.token }}
+
+      - name: Run update script
+        run: |
+          chmod +x update.sh  # Make update.sh executable
+          ./update.sh  # Run the script
+
+        env:  # Set environment variables for sensitive data
+          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
+          GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
+          SOURCE_URL: ${{ secrets.SOURCE_URL }}  # Store KOMINFO's URL securely
