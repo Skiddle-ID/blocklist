@@ -1,0 +1,36 @@
+name: Update Domain
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  copy_domains:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.BOT_GITHUB_TOKEN || github.token }}
+        
+      - name: Set up Git
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Set up time zone
+        run: export TZ=Asia/Jakarta
+
+      - name: Update Domains
+        run: |
+          FILE_NAME=$(date +"%Y-%m-%d")
+          if [ -e "$FILE_NAME" ]; then
+            rm "$FILE_NAME"
+          fi
+          cp domains "$FILE_NAME"
+          
+          git add "$FILE_NAME"
+          git commit -m "Update on $FILE_NAME"
+          git push -u origin main
