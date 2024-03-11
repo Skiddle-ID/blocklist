@@ -2,7 +2,6 @@
 
 FILE_NAME="$(date +"%Y-%m-%d")"
 
-cd "$TARGET_DIR"
 rm domains
 if [ -e "$FILE_NAME" ]; then
     rm "$FILE_NAME"
