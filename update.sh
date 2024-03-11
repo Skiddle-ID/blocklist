@@ -8,7 +8,7 @@ if [ -e "$FILE_NAME" ]; then
     rm "$FILE_NAME"
 fi
 
-curl --insecure --proxy "http://101.255.149.250:1234" -o "domains" "$SOURCE_URL"
+curl --insecure --proxy "http://180.250.200.178:3128" -o "domains" "$SOURCE_URL"
 
 git add domains
 git commit -m "Update"
