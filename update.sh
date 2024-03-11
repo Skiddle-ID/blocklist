@@ -9,11 +9,10 @@ fi
 
 curl --insecure -o "domains" "$SOURCE_URL"
 
-git add domains
-git commit -m "Update"
+
 git config user.name "Skiddle-Git"
 git config user.email "160487326+Skiddle-Git@users.noreply.github.com"
-git rebase
+git commit -am "Update"
 git push -u origin main
 
 cd ..
