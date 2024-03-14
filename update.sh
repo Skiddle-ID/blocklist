@@ -7,8 +7,8 @@ if [ -e "$FILE_NAME" ]; then
     rm "$FILE_NAME"
 fi
 
-curl --insecure -o "domains" "$SOURCE_URL"
-curl --insecure -o "ipaddress_isp" "https://trustpositif.kominfo.go.id/assets/db/ipaddress_isp"
+curl --insecure -o "domains" "$DOMAIN_URL"
+curl --insecure -o "ipaddress_isp" "$IP_URL"
 
 
 git config user.name "Skiddle-Git"
