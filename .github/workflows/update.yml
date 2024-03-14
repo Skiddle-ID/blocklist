@@ -23,4 +23,5 @@ jobs:
         env:  # Set environment variables for sensitive data
           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
           GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
-          SOURCE_URL: ${{ secrets.SOURCE_URL }}  # Store KOMINFO's URL securely
+          DOMAIN_URL: ${{ secrets.SOURCE_URL }}
+          IP_URL: ${{ secrets.SOURCE_URL2 }}
