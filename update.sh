@@ -8,7 +8,7 @@ if [ -e "$FILE_NAME" ]; then
 fi
 
 curl --insecure -o "domains" "$SOURCE_URL"
-curl --insecure -o "ipaddress" "$SOURCE_URL2"
+curl --insecure -o "ipaddress_isp" "$SOURCE_URL2"
 
 
 git config user.name "Skiddle-Git"
