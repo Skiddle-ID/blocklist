@@ -25,3 +25,4 @@ jobs:
           GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
           DOMAIN_URL: ${{ secrets.SOURCE_URL }}
           IP_URL: ${{ secrets.SOURCE_URL2 }}
+          SITUS_JUDI: ${{ secrets.SITUS_JUDI }}
