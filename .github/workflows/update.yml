@@ -2,7 +2,7 @@ name: Update Blocklist
 
 on:  # Define the events that trigger the workflow
   schedule:
-    - cron:  '0 * * * *' # Check Every Hours
+    - cron:  '0/15 * * * *' # Check Every 15 Minutes
   workflow_dispatch:
   
 jobs:
