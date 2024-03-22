@@ -2,9 +2,9 @@
 
 now=$(date +"%Y-%m-%d_%H-%M-%S")
 
-curl --insecure -o "domains" "$DOMAIN_URL"
-curl --insecure -o "ipaddress_isp" "$IP_URL"
-curl --insecure -o "situs_judi.txt" "$SITUS_JUDI"
+curl --insecure -m 30 -o "domains" "$DOMAIN_URL"
+curl --insecure -m 30 -o "ipaddress_isp" "$IP_URL"
+curl --insecure -m 30 -o "situs_judi.txt" "$SITUS_JUDI"
 
 
 git config user.name "Skiddle-Git"
