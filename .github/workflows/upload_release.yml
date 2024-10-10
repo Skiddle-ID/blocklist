@@ -48,31 +48,32 @@ jobs:
       - name: Install GitHub CLI
         run: |
           sudo apt-get update
-          sudo apt-get install gh
+          sudo apt-get install -y gh
 
       # Step 5: Authenticate GitHub CLI
       - name: Authenticate GitHub CLI
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      # Step 6: Create or Update GitHub Release and Upload Files
-      - name: Create or Update Release and Upload Files
+      # Step 6: Create or Update Release with the Same Tag (`latest`)
+      - name: Create or Update Release with Same Tag
         run: |
-          # Use only timestamp as the tag (e.g., YYYYMMDDHHMM)
-          TIMESTAMP=$(date +'%Y%m%d%H%M')
-          TAG="${TIMESTAMP}"
+          # Use the same tag `latest` for all releases
+          TAG="latest"
 
           echo "Creating or updating release with tag: $TAG"
 
-          # Create a new release
-          gh release create "$TAG" \
-            --title "Update Blocklist - $TIMESTAMP" \
-            --notes "Automated update containing the latest blocklist files."
+          # Check if the release with tag `latest` exists
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release $TAG exists. Deleting it first."
+            gh release delete "$TAG" -y
+          fi
 
-          # Upload files to the new release
-          gh release upload "$TAG" domains.txt --clobber
-          gh release upload "$TAG" ipaddress_isp.txt --clobber
-          gh release upload "$TAG" situs_judi.txt --clobber
+          # Create a new release with the `latest` tag
+          gh release create "$TAG" \
+            --title "Latest Blocklist Update" \
+            --notes "This release contains the latest blocklist updates." \
+            domains.txt ipaddress_isp.txt situs_judi.txt --clobber
 
       # Step 7: Clean up environment
       - name: Cleanup
