@@ -1,0 +1,56 @@
+name: Upload Files to GitHub Release
+
+on:
+  workflow_dispatch: # Allows you to manually trigger the workflow
+  schedule:
+    - cron: '0 * * * *' # Runs every hour, adjust this as needed
+
+jobs:
+  release-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Install GitHub CLI
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install gh
+
+      # Step 3: Authenticate GitHub CLI
+      - name: Authenticate GitHub CLI
+        run: |
+          gh auth setup-git
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      # Step 4: Download the files
+      - name: Download files
+        run: |
+          curl --insecure -m 300 -o "domains" "$DOMAIN_URL"
+          curl --insecure -m 300 -o "ipaddress_isp" "$IP_URL"
+          curl --insecure -m 300 -o "situs_judi.txt" "$SITUS_JUDI"
+        env:
+          DOMAIN_URL: ${{ secrets.SOURCE_URL }}
+          IP_URL: ${{ secrets.SOURCE_URL2 }}
+          SITUS_JUDI: ${{ secrets.SITUS_JUDI }}
+
+      # Step 5: Create or Update the Release
+      - name: Create or Update Release
+        run: |
+          # Check if the release exists, if not create it
+          if ! gh release view "v1.0" &>/dev/null; then
+            echo "Creating new release..."
+            gh release create "v1.0" --title "Automated Update v1.0" --notes "This is an automated release containing the latest files."
+          else
+            echo "Release already exists. Uploading new files..."
+          fi
+
+      # Step 6: Upload the downloaded files as assets to the release
+      - name: Upload files to release
+        run: |
+          gh release upload "v1.0" domains --clobber
+          gh release upload "v1.0" ipaddress_isp --clobber
+          gh release upload "v1.0" situs_judi.txt --clobber
