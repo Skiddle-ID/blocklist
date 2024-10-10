@@ -55,27 +55,30 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      # Step 6: Create or Update Release with the Same Tag (`latest`)
-      - name: Create or Update Release with Same Tag
+      # Step 6: Delete Existing Release with the `latest` Tag (if it exists)
+      - name: Delete Existing Release (if any)
         run: |
-          # Use the same tag `latest` for all releases
           TAG="latest"
-
-          echo "Creating or updating release with tag: $TAG"
-
-          # Check if the release with tag `latest` exists
           if gh release view "$TAG" &>/dev/null; then
             echo "Release $TAG exists. Deleting it first."
             gh release delete "$TAG" -y
+          else
+            echo "No existing release with tag $TAG found."
           fi
 
-          # Create a new release with the `latest` tag
+      # Step 7: Create a New Release with the Same Tag (`latest`)
+      - name: Create New Release with `latest` Tag
+        run: |
+          TAG="latest"
+          echo "Creating a new release with tag: $TAG"
+          
+          # Create a new release and upload the files
           gh release create "$TAG" \
             --title "Latest Blocklist Update" \
             --notes "This release contains the latest blocklist updates." \
-            domains.txt ipaddress_isp.txt situs_judi.txt --clobber
+            domains.txt ipaddress_isp.txt situs_judi.txt
 
-      # Step 7: Clean up environment
+      # Step 8: Clean up environment
       - name: Cleanup
         run: |
           rm -f domains.txt ipaddress_isp.txt situs_judi.txt
