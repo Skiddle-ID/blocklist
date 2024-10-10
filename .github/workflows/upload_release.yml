@@ -58,18 +58,23 @@ jobs:
       # Step 6: Create or Update GitHub Release and Upload Files
       - name: Create or Update Release and Upload Files
         run: |
-          # Define the release tag
-          TAG="v1.0"
+          # Use only timestamp as the tag (e.g., YYYYMMDDHHMM)
+          TIMESTAMP=$(date +'%Y%m%d%H%M')
+          TAG="${TIMESTAMP}"
 
-          # Check if the release exists, create if not
-          if ! gh release view "$TAG" &>/dev/null; then
-            echo "Creating new release..."
-            gh release create "$TAG" --title "Automated Update $TAG" --notes "This is an automated release containing the latest files."
-          else
-            echo "Release already exists. Uploading new files..."
-          fi
+          echo "Creating or updating release with tag: $TAG"
 
-          # Upload files to the release
+          # Create a new release
+          gh release create "$TAG" \
+            --title "Update Blocklist - $TIMESTAMP" \
+            --notes "Automated update containing the latest blocklist files."
+
+          # Upload files to the new release
           gh release upload "$TAG" domains.txt --clobber
           gh release upload "$TAG" ipaddress_isp.txt --clobber
           gh release upload "$TAG" situs_judi.txt --clobber
+
+      # Step 7: Clean up environment
+      - name: Cleanup
+        run: |
+          rm -f domains.txt ipaddress_isp.txt situs_judi.txt
