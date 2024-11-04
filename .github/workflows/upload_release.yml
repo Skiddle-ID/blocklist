@@ -28,10 +28,9 @@ jobs:
           curl --insecure -m 300 -o "situs_judi.txt" "${{ secrets.SITUS_JUDI }}"
         shell: bash
         continue-on-error: false
-        
-      - name: Cleanup & kill WireGuard
+
+      - name: kill WireGuard
         run: |
-          rm -f domains.txt ipaddress_isp.txt situs_judi.txt
           sudo wg-quick down wg0
         shell: bash
 
@@ -64,3 +63,8 @@ jobs:
               wc -l < situs_judi.txt
             ) situs judi" \
             domains.txt ipaddress_isp.txt situs_judi.txt
+
+      - name: Cleanup
+        run: |
+          rm -f domains.txt ipaddress_isp.txt situs_judi.txt
+        shell: bash
