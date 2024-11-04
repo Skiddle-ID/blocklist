@@ -61,7 +61,7 @@ jobs:
             ) IP addresses
             * situs_judi.txt: $(
               wc -l < situs_judi.txt
-            ) situs judi" \
+            ) domains" \
             domains.txt ipaddress_isp.txt situs_judi.txt
 
       - name: Cleanup
