@@ -7,56 +7,35 @@ on:
 
 jobs:
   update-blocklist:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.BOT_GITHUB_TOKEN || github.token }}
 
-      # Step 2: Print Environment Variables (Debugging)
-      - name: Print environment variables
+      - name: Download files & setup WireGuard
         run: |
-          echo "DOMAIN_URL=${{ secrets.SOURCE_URL }}"
-          echo "IP_URL=${{ secrets.SOURCE_URL2 }}"
-          echo "SITUS_JUDI=${{ secrets.SITUS_JUDI }}"
-
-      # Step 3: Download the files and verify
-      - name: Download files
-        run: |
-          echo "Downloading files from the provided URLs..."
+          sudo apt-get update
+          sudo apt-get install -y wireguard resolvconf
+          echo "${{ secrets.WIREGUARD_CONFIG }}" > wg0.conf
+          sudo mv wg0.conf /etc/wireguard/wg0.conf
+          sudo wg-quick up wg0
           curl --insecure -m 300 -o "domains.txt" "$DOMAIN_URL"
           curl --insecure -m 300 -o "ipaddress_isp.txt" "$IP_URL"
           curl --insecure -m 300 -o "situs_judi.txt" "$SITUS_JUDI"
+        shell: bash
+        continue-on-error: false
 
-          # Check if files are downloaded successfully
-          if [[ ! -f "domains.txt" || ! -f "ipaddress_isp.txt" || ! -f "situs_judi.txt" ]]; then
-            echo "Error: One or more files failed to download. Exiting."
-            exit 1
-          else
-            echo "Files downloaded successfully."
-          fi
-        env:
-          DOMAIN_URL: ${{ secrets.SOURCE_URL }}
-          IP_URL: ${{ secrets.SOURCE_URL2 }}
-          SITUS_JUDI: ${{ secrets.SITUS_JUDI }}
-
-      # Step 4: Install GitHub CLI (for uploading release assets)
-      - name: Install GitHub CLI
+      - name: Install GitHub CLI & authenticate
         run: |
           sudo apt-get update
           sudo apt-get install -y gh
-
-      # Step 5: Authenticate GitHub CLI
-      - name: Authenticate GitHub CLI
-        run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      # Step 6: Delete Existing Release with the `latest` Tag (if it exists)
-      - name: Delete Existing Release (if any)
+      - name: Delete existing release & create new one
         run: |
           TAG="latest"
           if gh release view "$TAG" &>/dev/null; then
@@ -65,20 +44,23 @@ jobs:
           else
             echo "No existing release with tag $TAG found."
           fi
-
-      # Step 7: Create a New Release with the Same Tag (`latest`)
-      - name: Create New Release with `latest` Tag
-        run: |
-          TAG="latest"
-          echo "Creating a new release with tag: $TAG"
-          
-          # Create a new release and upload the files
           gh release create "$TAG" \
             --title "Latest Blocklist Update" \
-            --notes "This release contains the latest blocklist updates." \
+            --notes "This release contains the latest blocklist updates:
+
+            * domains.txt: $(
+              wc -l < domains.txt
+            ) domains
+            * ipaddress_isp.txt: $(
+              wc -l < ipaddress_isp.txt
+            ) IP addresses
+            * situs_judi.txt: $(
+              wc -l < situs_judi.txt
+            ) situs judi" \
             domains.txt ipaddress_isp.txt situs_judi.txt
 
-      # Step 8: Clean up environment
-      - name: Cleanup
+      - name: Cleanup & kill WireGuard
         run: |
           rm -f domains.txt ipaddress_isp.txt situs_judi.txt
+          sudo wg-quick down wg0
+        shell: bash
