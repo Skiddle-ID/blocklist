@@ -1,4 +1,4 @@
-name: Update Blocklist
+name: Release Update
 
 on:
   schedule:
@@ -23,9 +23,9 @@ jobs:
           echo "${{ secrets.WIREGUARD_CONFIG }}" > wg0.conf
           sudo mv wg0.conf /etc/wireguard/wg0.conf
           sudo wg-quick up wg0
-          curl --insecure -m 300 -o "domains.txt" "$DOMAIN_URL"
-          curl --insecure -m 300 -o "ipaddress_isp.txt" "$IP_URL"
-          curl --insecure -m 300 -o "situs_judi.txt" "$SITUS_JUDI"
+          curl --insecure -m 300 -o "domains.txt" "${{ secrets.SOURCE_URL }}"
+          curl --insecure -m 300 -o "ipaddress_isp.txt" "${{ secrets.SOURCE_URL2 }}"
+          curl --insecure -m 300 -o "situs_judi.txt" "${{ secrets.SITUS_JUDI }}"
         shell: bash
         continue-on-error: false
         
