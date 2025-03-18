@@ -38,7 +38,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gh
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          echo "${{ secrets.BOT_GITHUB_TOKEN }}" | gh auth login --with-token
 
       - name: Delete existing release & create new one
         run: |
