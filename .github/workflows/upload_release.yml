@@ -2,7 +2,7 @@ name: Release Update
 
 on:
   schedule:
-    - cron: '0 * * * *' # Check Every Hour
+    - cron: '0 */4 * * *' # Check Every Hour
   workflow_dispatch:
 
 jobs:
