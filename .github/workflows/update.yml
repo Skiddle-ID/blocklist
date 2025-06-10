@@ -50,16 +50,19 @@ jobs:
           judi_count=$(grep -chE '.' situs_judi.txt_part_* 2>/dev/null || grep -cE '.' situs_judi.txt 2>/dev/null || echo 0)
 
           # Prepare summary
-          summary="<!-- SUMMARY:START -->
-### 🧾 Blocklist Summary (Last Updated: $now)
-
-| List         | Entries |
-|--------------|---------|
-| Domains      | $domain_count |
-| IP Address   | $ip_count |
-| Situs Judi   | $judi_count |
-
-<!-- SUMMARY:END -->"
+          summary=$(cat <<EOF
+          <!-- SUMMARY:START -->
+          ### 🧾 Blocklist Summary (Last Updated: $now)
+          
+          | List         | Entries |
+          |--------------|---------|
+          | Domains      | $domain_count |
+          | IP Address   | $ip_count |
+          | Situs Judi   | $judi_count |
+          
+          <!-- SUMMARY:END -->
+          EOF
+          )
 
           # Replace summary block in README.md
           tmpfile=$(mktemp)
