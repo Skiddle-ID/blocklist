@@ -42,9 +42,9 @@ jobs:
 
           # Split large files into 50MB chunks
           maxsize=52428800
-          for file in domains ipaddress_isp situs_judi; do
+          for file in domains.txt ipaddress_isp.txt situs_judi.txt; do
             if [ -f "$file" ] && [ $(stat -c%s "$file") -gt $maxsize ]; then
-              base=$(basename "$file" .txt)
+              base="${file%.txt}"
               split -b 50M -d -a 3 "$file" "${base}_" && rm "$file"
               i=1
               for part in ${base}_???; do
@@ -53,7 +53,7 @@ jobs:
               done
             fi
           done
-
+          
           # Prepare summary
           summary=$(cat <<EOF
           <!-- SUMMARY:START -->
