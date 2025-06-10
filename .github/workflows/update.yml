@@ -2,233 +2,121 @@ name: Update Blocklist
 
 on:
   schedule:
-    - cron: '0 * * * *' # Run hourly
+    - cron: '0 * * * *'  # Every hour
   workflow_dispatch:
 
 jobs:
   update-blocklist:
     runs-on: ubuntu-latest
-    env:
-      # Set environment variables for all steps in this job
-      DOMAIN_URL: ${{ secrets.SOURCE_URL }}
-      IP_URL: ${{ secrets.SOURCE_URL2 }}
-      SITUS_JUDI: ${{ secrets.SITUS_JUDI }}
-      GIT_USERNAME: ${{ secrets.GIT_USERNAME || 'skiddle-bot' }} # Fallback if secret is not set
-      GIT_EMAIL: ${{ secrets.GIT_EMAIL || '165562787+skiddle-bot@users.noreply.github.com' }} # Fallback
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          # Use a dedicated bot token for push actions, fallback to default GITHUB_TOKEN
-          # BOT_GITHUB_TOKEN must have 'repo' scope for pushing changes
+          ref: ${{ github.head_ref }}
           token: ${{ secrets.BOT_GITHUB_TOKEN || github.token }}
-          ref: ${{ github.head_ref }} # Ensure we checkout the correct branch
 
       - name: Setup WireGuard
         run: |
-          echo "Updating apt-get and installing WireGuard..."
           sudo apt-get update
           sudo apt-get install -y wireguard resolvconf
-          echo "Writing WireGuard config to /etc/wireguard/wg0.conf..."
-          # Ensure the secret contains the correct WireGuard config format.
-          # Use tee with sudo to write to a protected directory.
-          echo "${{ secrets.WIREGUARD_CONFIG }}" | sudo tee /etc/wireguard/wg0.conf > /dev/null
-          echo "Bringing up WireGuard interface..."
+          echo "${{ secrets.WIREGUARD_CONFIG }}" > wg0.conf
+          sudo mv wg0.conf /etc/wireguard/wg0.conf
           sudo wg-quick up wg0
         shell: bash
-        continue-on-error: false # Stop if WireGuard setup fails
 
-      - name: Download Blocklist Files
-        id: download_files # Add an ID to reference outputs from this step (not directly used here, but good practice)
+      - name: Download and Update Blocklist
         run: |
-          echo "Downloading domain blocklist from $DOMAIN_URL..."
-          curl --insecure -m 300 -o "domains" "$DOMAIN_URL" || { echo "Failed to download domains"; exit 1; }
-
-          echo "Downloading IP address blocklist from $IP_URL..."
-          curl --insecure -m 300 -o "ipaddress_isp" "$IP_URL" || { echo "Failed to download ipaddress_isp"; exit 1; }
-
-          echo "Downloading gambling sites blocklist from $SITUS_JUDI..."
-          curl --insecure -m 300 -o "situs_judi.txt" "$SITUS_JUDI" || { echo "Failed to download situs_judi.txt"; exit 1; }
-
-          # Check if files were downloaded and are not empty
-          if [ ! -s domains ]; then echo "Error: 'domains' file is empty or missing."; exit 1; fi
-          if [ ! -s ipaddress_isp ]; then echo "Error: 'ipaddress_isp' file is empty or missing."; exit 1; fi
-          if [ ! -s situs_judi.txt ]; then echo "Error: 'situs_judi.txt' file is empty or missing."; exit 1; fi
-
-          echo "All files downloaded successfully."
-        shell: bash
-        continue-on-error: false
-
-      # --- File Slicing Logic ---
-      # This step will split 'domains' and 'ipaddress_isp' into smaller files
-      # Modify `lines_per_file` as needed.
-      - name: Slice Large Files
-        id: slice_files # Add an ID for this step to reference its outputs
-        run: |
-          echo "Starting file slicing process..."
-          # Max lines per output file. Adjust this value based on your needs.
-          LINES_PER_FILE=100000
-
-          # Initialize counts for summary
-          DOMAINS_COUNT=0
-          IP_COUNT=0
-          SITUS_JUDI_COUNT=0
-
-          # Slice 'domains' file and count total lines
-          if [ -f domains ]; then
-            echo "Slicing 'domains' into files with max ${LINES_PER_FILE} lines each..."
-            mkdir -p domains_parts
-            # Count lines in original file before splitting
-            DOMAINS_COUNT=$(wc -l < domains | awk '{print $1}')
-            split -l $LINES_PER_FILE domains domains_parts/domains_part_
-            echo "Slicing of 'domains' completed. Parts are in domains_parts/."
-            rm domains # Remove the original large file after splitting
-          else
-            echo "'domains' file not found, skipping slicing."
-          fi
-
-          # Slice 'ipaddress_isp' file and count total lines
-          if [ -f ipaddress_isp ]; then
-            echo "Slicing 'ipaddress_isp' into files with max ${LINES_PER_FILE} lines each..."
-            mkdir -p ipaddress_isp_parts
-            # Count lines in original file before splitting
-            IP_COUNT=$(wc -l < ipaddress_isp | awk '{print $1}')
-            split -l $LINES_PER_FILE ipaddress_isp ipaddress_isp_parts/ip_part_
-            echo "Slicing of 'ipaddress_isp' completed. Parts are in ipaddress_isp_parts/."
-            rm ipaddress_isp # Remove the original large file after splitting
-          else
-            echo "'ipaddress_isp' file not found, skipping slicing."
-          fi
-
-          # Count lines for 'situs_judi.txt' (assuming this one doesn't need slicing)
-          if [ -f situs_judi.txt ]; then
-            SITUS_JUDI_COUNT=$(wc -l < situs_judi.txt | awk '{print $1}')
-          else
-            echo "'situs_judi.txt' file not found."
-          fi
-
-          echo "File slicing and initial counting completed."
-
-          # Set outputs for use in README update step
-          echo "DOMAINS_COUNT=$DOMAINS_COUNT" >> "$GITHUB_OUTPUT"
-          echo "IP_COUNT=$IP_COUNT" >> "$GITHUB_OUTPUT"
-          echo "SITUS_JUDI_COUNT=$SITUS_JUDI_COUNT" >> "$GITHUB_OUTPUT"
-
-        shell: bash
-        continue-on-error: false
-
-      - name: Update README.md Summary
-        id: readme_update # Add an ID for this step to reference its outputs
-        run: |
-          LAST_UPDATED=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          DOMAINS_COUNT="${{ steps.slice_files.outputs.DOMAINS_COUNT }}"
-          IP_COUNT="${{ steps.slice_files.outputs.IP_COUNT }}"
-          SITUS_JUDI_COUNT="${{ steps.slice_files.outputs.SITUS_JUDI_COUNT }}"
-
-          echo "Generating new README summary..."
-          SUMMARY_CONTENT=$(cat <<EOF
-<!-- SUMMARY:START -->
-## Blocklist Summary
-
-| Blocklist Type | Number of Entries |
-|----------------|-------------------|
-| Domains        | ${DOMAINS_COUNT}      |
-| IP Addresses   | ${IP_COUNT}        |
-| Situs Judi     | ${SITUS_JUDI_COUNT} |
-
-Last Updated: **${LAST_UPDATED}**
-<!-- SUMMARY:END -->
-EOF
-          )
-          echo "$SUMMARY_CONTENT"
-
-          # Use awk to replace content between markers
-          # This robustly handles multi-line replacements
-          awk -v start_marker="<!-- SUMMARY:START -->" \
-              -v end_marker="<!-- SUMMARY:END -->" \
-              -v new_content="$SUMMARY_CONTENT" \
-              'BEGIN { in_summary = 0 }
-               $0 == start_marker { print; print new_content; in_summary = 1 }
-               $0 == end_marker { print; in_summary = 0 }
-               !in_summary && $0 != start_marker && $0 != end_marker { print }
-              ' README.md > README.md.tmp && mv README.md.tmp README.md
-
-          echo "README.md updated with new summary."
-          echo "LAST_UPDATED_TIME=$LAST_UPDATED" >> "$GITHUB_OUTPUT" # Output for Discord notification
-        shell: bash
-        continue-on-error: false
-
-      - name: Configure Git and Commit Changes
-        run: |
+          set -e
           now=$(date +"%Y-%m-%d_%H-%M-%S")
-          echo "Configuring Git user: ${GIT_USERNAME} <${GIT_EMAIL}>"
-          git config user.name "${GIT_USERNAME}"
-          git config user.email "${GIT_EMAIL}"
 
-          echo "Adding all changes to Git staging area..."
+          # Download source files
+          curl --insecure -m 300 -o "domains" "$DOMAIN_URL"
+          curl --insecure -m 300 -o "ipaddress_isp" "$IP_URL"
+          curl --insecure -m 300 -o "situs_judi.txt" "$SITUS_JUDI"
+
+          # Split large files into 50MB chunks
+          maxsize=52428800
+          for file in domains ipaddress_isp situs_judi.txt; do
+            if [ -f "$file" ] && [ $(stat -c%s "$file") -gt $maxsize ]; then
+              split -b 50M "$file" "${file}_part_"
+              rm "$file"
+            fi
+          done
+
+          # Count entries
+          domain_count=$(grep -chE '.' domains_part_* 2>/dev/null || grep -cE '.' domains 2>/dev/null || echo 0)
+          ip_count=$(grep -chE '.' ipaddress_isp_part_* 2>/dev/null || grep -cE '.' ipaddress_isp 2>/dev/null || echo 0)
+          judi_count=$(grep -chE '.' situs_judi.txt_part_* 2>/dev/null || grep -cE '.' situs_judi.txt 2>/dev/null || echo 0)
+
+          # Prepare summary
+          summary="<!-- SUMMARY:START -->
+### 🧾 Blocklist Summary (Last Updated: $now)
+
+| List         | Entries |
+|--------------|---------|
+| Domains      | $domain_count |
+| IP Address   | $ip_count |
+| Situs Judi   | $judi_count |
+
+<!-- SUMMARY:END -->"
+
+          # Replace summary block in README.md
+          tmpfile=$(mktemp)
+          awk '/<!-- SUMMARY:START -->/,/<!-- SUMMARY:END -->/ {next} {print}' README.md > "$tmpfile"
+          echo "$summary" >> "$tmpfile"
+          mv "$tmpfile" README.md
+
+          # Git operations
+          git config user.name "skiddle-bot"
+          git config user.email "165562787+skiddle-bot@users.noreply.github.com"
           git add .
-
-          # Check if there are any changes to commit (e.g., if files were actually updated or README changed)
-          if git diff --cached --exit-code; then
-            echo "No changes detected. Skipping commit."
-          else
-            echo "Committing changes with message: Updated blocklists and README on $now"
-            git commit -m "Updated blocklists and README on $now"
-            echo "Rebasing local changes with remote (to avoid merge conflicts)..."
-            # It's safer to pull --rebase before pushing to avoid conflicts
-            git pull --rebase origin main || { echo "Git pull --rebase failed."; exit 1; }
-            echo "Pushing changes to origin main..."
-            git push origin main || { echo "Git push failed. Ensure BOT_GITHUB_TOKEN has write access."; exit 1; }
-            echo "Changes pushed successfully."
-          fi
+          git commit -m "Updated on $now" || echo "No changes to commit"
+          git rebase
+          git push -u origin main
         shell: bash
-        continue-on-error: false
+        env:
+          DOMAIN_URL: ${{ secrets.SOURCE_URL }}
+          IP_URL: ${{ secrets.SOURCE_URL2 }}
+          SITUS_JUDI: ${{ secrets.SITUS_JUDI }}
 
-      - name: Teardown WireGuard
-        # This step will always run, even if previous steps failed,
-        # ensuring the WireGuard interface is brought down.
-        if: always() # Ensures this step runs regardless of previous step outcomes
+      - name: Kill WireGuard
         run: |
-          echo "Bringing down WireGuard interface..."
-          sudo wg-quick down wg0 || echo "WireGuard interface not found or failed to bring down."
+          sudo wg-quick down wg0
         shell: bash
 
-      - name: Send Discord Notification (Success)
-        if: success() # Only run if all previous steps succeeded
-        uses: peaceiris/actions-discord-notifications@v1.9.0
-        env:
-          # Use the single secret for the full webhook URL
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        with:
-          content: "✅ Blocklist update workflow completed successfully!"
-          color: 0x00FF00 # Green color for success
-          title: "Blocklist Update Success"
-          description: |
-            Blocklists in repository `${{ github.repository }}` were updated successfully.
-            Workflow: [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            Commit: `${{ github.sha }}`
-            Branch: `${{ github.ref_name }}`
-            Last Updated in README: `${{ steps.readme_update.outputs.LAST_UPDATED_TIME }}`
-            Domains: `${{ steps.slice_files.outputs.DOMAINS_COUNT }}`
-            IPs: `${{ steps.slice_files.outputs.IP_COUNT }}`
-            Situs Judi: `${{ steps.slice_files.outputs.SITUS_JUDI_COUNT }}`
+      - name: Notify via Discord (Success)
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -X POST -d '{
+            "embeds": [{
+              "title": "✅ Blocklist Update Successful",
+              "description": "The blocklist was updated and committed successfully.",
+              "color": 3066993,
+              "fields": [
+                {"name": "Repository", "value": "${{ github.repository }}", "inline": true},
+                {"name": "Time", "value": "'"$(date +"%Y-%m-%d %H:%M:%S")"'", "inline": true}
+              ],
+              "footer": {"text": "Skiddle Bot | GitHub Actions"}
+            }]
+          }' ${{ secrets.DISCORD_WEBHOOK }}
+        shell: bash
 
-      - name: Send Discord Notification (Failure)
-        if: failure() # Only run if any previous step failed
-        uses: peaceiris/actions-discord-notifications@v1.9.0
-        env:
-          # Use the single secret for the full webhook URL
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        with:
-          content: "❌ Blocklist update workflow failed!"
-          color: 0xFF0000 # Red color for failure
-          title: "Blocklist Update Failed"
-          description: |
-            The blocklist update workflow for repository `${{ github.repository }}` failed.
-            Please check the workflow run for details:
-            [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            Workflow: `${{ github.workflow }}`
-            Branch: `${{ github.ref_name }}`
-            Commit: `${{ github.sha }}`
-          continue-on-error: true # Ensure this notification step doesn't fail the workflow itself
+      - name: Notify via Discord (Failure)
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -X POST -d '{
+            "embeds": [{
+              "title": "❌ Blocklist Update Failed",
+              "description": "An error occurred during the workflow execution.",
+              "color": 15158332,
+              "fields": [
+                {"name": "Repository", "value": "${{ github.repository }}", "inline": true},
+                {"name": "Time", "value": "'"$(date +"%Y-%m-%d %H:%M:%S")"'", "inline": true}
+              ],
+              "footer": {"text": "Skiddle Bot | GitHub Actions"}
+            }]
+          }' ${{ secrets.DISCORD_WEBHOOK }}
+        shell: bash
