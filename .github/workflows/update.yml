@@ -3,7 +3,7 @@ name: Update Blocklist
 on:
   schedule:
     - cron: '0 * * * *' # Run hourly
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   update-blocklist:
