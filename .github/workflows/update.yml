@@ -115,7 +115,7 @@ jobs:
               "color": 3066993,
               "fields": [
                 {"name": "Repository", "value": "${{ github.repository }}", "inline": true},
-                {"name": "Time", "value": "'"$(date +"%Y-%m-%d %H:%M:%S")"'", "inline": true}
+                {"name": "Time", "value": "'"$(date +"%Y-%m-%d %H-%M-%S")"'", "inline": true}
               ],
               "footer": {"text": "Skiddle Bot | GitHub Actions"}
             }]
