@@ -28,7 +28,7 @@ jobs:
       - name: Download and Update Blocklist
         run: |
           set -e
-          now=$(date +"%Y-%m-%d %H-%M-%S")
+          now=$(date +"%Y-%m-%d %H:%M:%S")
 
           # Download source files
           curl --insecure -m 300 -o "domains.txt" "$DOMAIN_URL"
@@ -115,7 +115,7 @@ jobs:
               "color": 3066993,
               "fields": [
                 {"name": "Repository", "value": "${{ github.repository }}", "inline": true},
-                {"name": "Time", "value": "'"$(date +"%Y-%m-%d %H-%M-%S")"'", "inline": true}
+                {"name": "Time", "value": "'"$(date +"%Y-%m-%d %H:%M:%S")"'", "inline": true}
               ],
               "footer": {"text": "Skiddle Bot | GitHub Actions"}
             }]
@@ -133,7 +133,7 @@ jobs:
               "color": 15158332,
               "fields": [
                 {"name": "Repository", "value": "${{ github.repository }}", "inline": true},
-                {"name": "Time", "value": "'"$(date +"%Y-%m-%d %H-%M-%S")"'", "inline": true}
+                {"name": "Time", "value": "'"$(date +"%Y-%m-%d %H:%M:%S")"'", "inline": true}
               ],
               "footer": {"text": "Skiddle Bot | GitHub Actions"}
             }]
