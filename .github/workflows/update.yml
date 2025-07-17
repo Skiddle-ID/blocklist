@@ -28,7 +28,7 @@ jobs:
       - name: Download and Update Blocklist
         run: |
           set -e
-          now=$(date +"%Y-%m-%d_%H-%M-%S")
+          now=$(date +"%Y-%m-%d %H-%M-%S")
 
           # Download source files
           curl --insecure -m 300 -o "domains.txt" "$DOMAIN_URL"
