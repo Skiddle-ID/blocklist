@@ -4,12 +4,12 @@ This Is used on my API Service in [CheckDomain](https://github.com/Skiddle-ID/ch
 If you used this Blocklist on your project please updated to used links from the github release.
 
 <!-- SUMMARY:START -->
-### 🧾 Blocklist Summary (Last Updated: 2025-07-18 09:32:35)
+### 🧾 Blocklist Summary (Last Updated: 2025-07-18 10:31:18)
 
 | List         | Entries |
 |--------------|---------|
-| Domains      | 7312706 |
-| IP Address   | 94076 |
+| Domains      | 7314413 |
+| IP Address   | 94078 |
 | Situs Judi   | 3088629 |
 
 <!-- SUMMARY:END -->
