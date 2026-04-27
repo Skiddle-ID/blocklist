@@ -5,7 +5,7 @@ If you used this Blocklist on your project please updated to used links from the
 If you need near real-time update used file from my [Blocklist CDN](https://blocklist.skiddle.id/)
 
 <!-- SUMMARY:START -->
-### 🧾 Blocklist Summary (Last Updated: 2026-04-27 16:48:01)
+### 🧾 Blocklist Summary (Last Updated: 2026-04-27 18:11:58)
 
 | List         | Entries |
 |--------------|---------|
