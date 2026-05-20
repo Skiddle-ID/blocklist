@@ -5,11 +5,11 @@ If you used this Blocklist on your project please updated to used links from the
 If you need near real-time update used file from my [Blocklist CDN](https://blocklist.skiddle.id/)
 
 <!-- SUMMARY:START -->
-### 🧾 Blocklist Summary (Last Updated: 2026-05-20 08:32:38)
+### 🧾 Blocklist Summary (Last Updated: 2026-05-20 11:54:09)
 
 | List         | Entries |
 |--------------|---------|
-| Domains      | 9039773 |
+| Domains      | 9044091 |
 | IP Address   | 102133 |
 | Situs Judi   | 3088683 |
 
