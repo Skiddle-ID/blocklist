@@ -1,5 +1,4 @@
--lahhh.web.app
-katazterbangbersmaku.web.app
+zterbangbersmaku.web.app
 ko-cups.netlify.app
 lampu-sorot.netlify.app
 page1.bonusulukas389.quest
@@ -180747,7 +180746,6 @@ rtpku.bgnscatter78.site
 ru7777.com
 rumusangka.org
 rumusnewavanzatoto.com
-rupiahjava.run
 russellcountyco-op.com
 ryukyu.org.uk
 s1k.abilityhealthcarellc.com
